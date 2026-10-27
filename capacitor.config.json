@@ -1,0 +1,8 @@
+{
+  "appId": "com.example.app",
+  "appName": "sistransporte-conductores",
+  "webDir": "dist",
+  "android": {
+    "useLegacyBridge": true
+  }
+}

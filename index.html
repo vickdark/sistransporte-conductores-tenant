@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SisTransporte Conductores</title>
+  <link rel="stylesheet" href="/src/styles.css">
+  
+  <style>
+    /* Critical Fix: Ensure pages take full height and are visible */
+    ion-nav > .ion-page {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 1 !important;
+      z-index: 1;
+      contain: layout size style;
+    }
+    
+    ion-nav > .ion-page-hidden {
+      display: none !important;
+    }
+  </style>
+
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+  <ion-app>
+    <ion-router use-hash="false">
+      <ion-route url="/" component="page-login"></ion-route>
+      <ion-route url="/home" component="page-home"></ion-route>
+      <ion-route url="/login" component="page-login"></ion-route>
+      <ion-route url="/pendientes" component="page-pendientes"></ion-route>
+      <ion-route url="/progreso" component="page-progreso"></ion-route>
+      <ion-route url="/completados" component="page-completados"></ion-route>
+      <ion-route url="/cancelados" component="page-cancelados"></ion-route>
+      <ion-route url="/combustible" component="page-combustible"></ion-route>
+      <ion-route url="/novedades" component="page-novedades"></ion-route>
+      <ion-route url="/checklist" component="page-checklist"></ion-route>
+      <ion-route url="/apoyos" component="page-apoyos"></ion-route>
+      <ion-route url="/show/:id" component="page-show"></ion-route>
+    </ion-router>
+
+    <ion-menu content-id="main-content" side="start" menu-id="first" disabled="true">
+      <ion-header class="ion-no-border">
+        <ion-toolbar style="--background: #1a202c; --color: white; padding: 10px 0;">
+          <ion-title style="font-weight: 800; font-size: 1.2rem;">Menú</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list id="side-menu-list">
+          <ion-menu-toggle auto-hide="false">
+            <ion-item button href="/home">
+              <ion-icon slot="start" name="home-outline"></ion-icon>
+              <ion-label>Inicio</ion-label>
+            </ion-item>
+            <ion-item button href="/pendientes">
+              <ion-icon slot="start" name="list-outline" color="warning"></ion-icon>
+              <ion-label>Pendientes</ion-label>
+            </ion-item>
+            <ion-item button href="/progreso">
+              <ion-icon slot="start" name="refresh-outline" color="primary"></ion-icon>
+              <ion-label>En Progreso</ion-label>
+            </ion-item>
+            <ion-item button href="/completados">
+              <ion-icon slot="start" name="checkmark-circle-outline" color="success"></ion-icon>
+              <ion-label>Completados</ion-label>
+            </ion-item>
+            <ion-item button href="/cancelados">
+              <ion-icon slot="start" name="close-circle-outline" color="danger"></ion-icon>
+              <ion-label>Cancelados</ion-label>
+            </ion-item>
+            <ion-item button href="/combustible">
+              <ion-icon slot="start" name="flame-outline" color="tertiary"></ion-icon>
+              <ion-label>Combustible</ion-label>
+            </ion-item>
+            <!--
+            <ion-item button href="/novedades">
+              <ion-icon slot="start" name="notifications-outline" color="medium"></ion-icon>
+              <ion-label>Novedades</ion-label>
+            </ion-item>
+            -->
+            <ion-item button href="/checklist">
+              <ion-icon slot="start" name="clipboard-outline" color="secondary"></ion-icon>
+              <ion-label>Check List</ion-label>
+            </ion-item>
+            <ion-item button href="/apoyos">
+              <ion-icon slot="start" name="help-circle-outline" color="warning"></ion-icon>
+              <ion-label>Apoyo</ion-label>
+            </ion-item>
+            <ion-item button id="menu-logout-btn">
+              <ion-icon slot="start" name="log-out-outline"></ion-icon>
+              <ion-label>Cerrar Sesión</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+        </ion-list>
+      </ion-content>
+    </ion-menu>
+
+    <!-- Main Navigation Outlet -->
+    <ion-nav id="main-content"></ion-nav>
+
+  </ion-app>
+</body>
+</html>
