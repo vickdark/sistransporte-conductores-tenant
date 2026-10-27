@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vue-tsc --noEmit && vite build",
+    "typecheck": "vue-tsc --noEmit",
     "preview": "vite preview"
   },
   "keywords": [],
@@ -26,12 +27,19 @@
     "@capacitor/preferences": "^8.0.0",
     "@ionic/core": "^8.7.11",
     "@ionic/pwa-elements": "^3.3.0",
+    "@ionic/vue": "^8.7.11",
+    "@ionic/vue-router": "^8.7.11",
     "capacitor-foreground-service": "^1.0.3",
     "ionicons": "^8.0.13",
-    "vite": "^7.2.6"
+    "vite": "^7.2.6",
+    "vue": "^3.5.44",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "patch-package": "^8.0.1"
+    "@vitejs/plugin-vue": "^6.0.10",
+    "patch-package": "^8.0.1",
+    "typescript": "~5.9",
+    "vue-tsc": "^3.3.13"
   }
 }

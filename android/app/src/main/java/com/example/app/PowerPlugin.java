@@ -33,7 +33,7 @@ public class PowerPlugin extends Plugin {
     public void acquireWakeLock(PluginCall call) {
         if (wakeLock == null) {
             PowerManager powerManager = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
-            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "KemuelApp::TrackingWakeLock");
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SisTransporte::TrackingWakeLock");
         }
         if (!wakeLock.isHeld()) {
             wakeLock.acquire();
