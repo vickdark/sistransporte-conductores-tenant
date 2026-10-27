@@ -14,7 +14,8 @@ Este documento explica el funcionamiento técnico del sistema de rastreo GPS en 
 El mayor desafío en Android es evitar que el sistema operativo "congele" la app cuando el conductor apaga la pantalla y guarda el teléfono en su bolsillo. Para solucionarlo, hemos implementado una "Triple Barrera":
 
 ### 1. Foreground Service Nativo (Prioridad Alta)
-Al iniciar el viaje, se lanza `capacitor-foreground-service`. Esto ancla una notificación inamovible en la barra de tareas ("Telemetría activa. No cerrar la aplicación.").
+Al iniciar el viaje, `@capacitor-community/background-geolocation` arranca su propio foreground service de tipo `location` (el que exige Android 14+), con una notificación fija en la barra ("Servicio #… en curso. Rastreo GPS activo. No cierres la aplicación hasta finalizar el servicio.").
+* **Límite:** si el conductor cierra la app (la desliza de recientes), Android detiene el servicio y el rastreo; al abrirla de nuevo se retoma solo. Por eso, con un servicio en curso, el botón «atrás» minimiza la app en vez de cerrarla.
 * **Objetivo:** Engañar al *OOM Killer* de Android, indicándole que el usuario está "usando" activamente la aplicación. Así evitamos que la aplicación se cierre por falta de memoria RAM si el conductor abre otras apps pesadas como WhatsApp o Google Maps.
 
 ### 2. Prevención de Suspensión de Pantalla (`KeepAwake`)

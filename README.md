@@ -24,7 +24,6 @@ Hecha con **Ionic Vue 8 + TypeScript + Vite + Capacitor 8**. El diseño replica 
 
 ```bash
 npm ci                 # instala exactamente las versiones de package-lock.json
-npx patch-package      # aplica el parche de capacitor-foreground-service (carpeta patches/)
 ```
 
 Crea `.env` en la raíz con la dirección de la API central:
@@ -65,15 +64,16 @@ src/
   utils/        Formatos de fecha, km y nombres de los estados
   styles.css    Tokens de color del portal y estilos de los componentes de Ionic
 android/        Proyecto nativo de Capacitor (incluye PowerPlugin.java)
-patches/        Parche de capacitor-foreground-service
 ```
 
 ## Notas
 
 - **Fotos:** las fotos se toman solo con la cámara del teléfono, sin galería ni archivos, porque el
   servidor solo acepta fotos tomadas en el momento.
-- **GPS:** el rastreo arranca al iniciar un servicio y se detiene al finalizarlo o al cerrar sesión. Si la
-  app se cierra o el teléfono se reinicia, el rastreo se retoma. Los detalles están en
-  [DOCUMENTACION_GPS.md](DOCUMENTACION_GPS.md).
+- **GPS:** el rastreo arranca al iniciar un servicio y se detiene al finalizarlo o al cerrar sesión.
+  Sigue con la pantalla apagada o la app en segundo plano, pero **se detiene si el conductor cierra la
+  app** (la desliza de recientes). Al abrirla de nuevo (también tras reiniciar el teléfono) se retoma
+  sola. Con un servicio en curso, el botón «atrás» minimiza la app en vez de cerrarla. Los detalles
+  están en [DOCUMENTACION_GPS.md](DOCUMENTACION_GPS.md).
 - **Tema:** el modo claro u oscuro se cambia con el botón del encabezado y se recuerda en el teléfono.
 - **API:** el contrato está en el sistema web, en `docs/API_APP_CONDUCTOR.md`.

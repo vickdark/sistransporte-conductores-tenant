@@ -1,6 +1,6 @@
 {
-  "appId": "com.example.app",
-  "appName": "sistransporte-conductores",
+  "appId": "com.sistransporte.conductores",
+  "appName": "SisTransporte Conductor",
   "webDir": "dist",
   "android": {
     "useLegacyBridge": true

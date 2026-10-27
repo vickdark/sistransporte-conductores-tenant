@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">sistransporte-conductores</string>
-    <string name="title_activity_main">sistransporte-conductores</string>
-    <string name="package_name">com.example.app</string>
-    <string name="custom_url_scheme">com.example.app</string>
+    <string name="app_name">SisTransporte Conductor</string>
+    <string name="title_activity_main">SisTransporte Conductor</string>
+    <string name="package_name">com.sistransporte.conductores</string>
+    <string name="custom_url_scheme">com.sistransporte.conductores</string>
 </resources>

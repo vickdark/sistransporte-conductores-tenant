@@ -11,7 +11,7 @@ la app le habla directo a su empresa. Los archivos `.env` están en la raíz y n
 *   **`.env` (desarrollo)**: `npm run dev` o `npx vite build --mode development`.
     *   `VITE_CENTRAL_API_URL=https://sistema-transporte-tenant.test/api/v1/` (en un teléfono, usar una dirección que el teléfono alcance: IP de la red o un túnel https).
 *   **`.env.production` (producción)**: `npm run build`.
-    *   `VITE_CENTRAL_API_URL=https://{dominio central}/api/v1/` (reemplazar `CAMBIAR-DOMINIO-CENTRAL` antes de compilar; si no, la app avisa «App sin configurar» al ingresar).
+    *   `VITE_CENTRAL_API_URL=https://transporte.mambacode.dev/api/v1/` (el dominio central de producción; cada empresa responde en `{empresa}.transporte.mambacode.dev` y la app la recibe al ingresar).
 
 ## 2. Variables Disponibles
 
@@ -23,12 +23,11 @@ la «App móvil del conductor» en el panel central.
 ## Estructura (Ionic Vue + TypeScript)
 
 *   `src/api/`: cliente HTTP (token, dirección de la empresa, 401 → login), sesión y tipos de la API.
-*   `src/services/gpsTracker.ts`: rastreo GPS en segundo plano (BackgroundGeolocation, foreground service, KeepAwake y `PowerPlugin.java`), con envío por lotes a `POST /gps/positions`.
+*   `src/services/gpsTracker.ts`: rastreo GPS en segundo plano (BackgroundGeolocation con su foreground service de ubicación, KeepAwake y `PowerPlugin.java`), con envío por lotes a `POST /gps/positions`.
 *   `src/views/`: login, inicio, servicios, detalle, tanqueo, checklist y novedad.
 *   `src/components/`, `src/composables/`, `src/utils/`: piezas compartidas.
 
-`npm run typecheck` revisa los tipos; `npm run build` los revisa y compila. Tras `npm install`, aplicar
-el parche de `capacitor-foreground-service` con `npx patch-package`.
+`npm run typecheck` revisa los tipos; `npm run build` los revisa y compila.
 
 ## 3. Cómo Generar la APK según el Entorno
 

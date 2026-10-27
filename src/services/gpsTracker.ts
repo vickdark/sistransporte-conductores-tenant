@@ -10,8 +10,10 @@ import { isSignedIn, session } from '@/api/session';
 
 /**
  * Seguimiento GPS en segundo plano del servicio en curso (rastreo «tiempo real» de la app anterior):
- * BackgroundGeolocation con foreground service, KeepAwake y el wakelock nativo (PowerPlugin.java) para
- * que Android no congele la app con la pantalla apagada. Los puntos se acumulan en un búfer persistente
+ * BackgroundGeolocation (su propio foreground service de tipo `location`, con la notificación), KeepAwake
+ * y el wakelock nativo (PowerPlugin.java) para que Android no congele la app con la pantalla apagada.
+ * El plugin pide un punto por segundo (fijo en su código nativo) y se detiene si se cierra la app
+ * (deslizarla o salir con «atrás»); al abrirla de nuevo, `resume()` lo retoma. Los puntos se acumulan en un búfer persistente
  * y se envían por lotes a `POST /gps/positions` de la empresa (contrato en la API v1): el servidor sabe
  * el conductor y el vehículo por el token, y responde `tracking: false` cuando el servicio terminó.
  */
@@ -33,7 +35,8 @@ interface BackgroundGeolocationPlugin {
 }
 
 interface PowerWakelockPlugin {
-  requestLocationAlways(): Promise<{ alwaysGranted?: boolean }>;
+  checkLocationAlways(): Promise<{ fineGranted?: boolean; alwaysGranted?: boolean }>;
+  requestLocationAlways(): Promise<{ fineGranted?: boolean; alwaysGranted?: boolean }>;
   openAppSettings(): Promise<void>;
   requestNotificationsPermission(): Promise<{ granted?: boolean }>;
   openAppNotificationSettings(): Promise<void>;
@@ -43,14 +46,8 @@ interface PowerWakelockPlugin {
   releaseWakeLock(): Promise<void>;
 }
 
-interface ForegroundServicePlugin {
-  start(options: Record<string, unknown>): Promise<void>;
-  stop(): Promise<void>;
-}
-
 const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation');
 const PowerWakelock = registerPlugin<PowerWakelockPlugin>('PowerWakelock');
-const ForegroundService = registerPlugin<ForegroundServicePlugin>('ForegroundService');
 
 /** Un punto como lo recibe la API (más el servicio al que pertenece). */
 interface GpsPoint {
@@ -232,15 +229,25 @@ async function ensurePermissions(): Promise<boolean> {
 
   if (Capacitor.getPlatform() === 'android') {
     try {
-      const location = await PowerWakelock.requestLocationAlways();
-      if (!location?.alwaysGranted) {
-        await notify('Ubicación requerida', "Para rastrear el servicio permite la ubicación «Todo el tiempo». Se abrirán los ajustes de la app.");
+      // Con «Solo mientras se usa la app» el rastreo también funciona: el foreground service de
+      // ubicación arranca con la app abierta y Android le deja recibir puntos en segundo plano.
+      // «Todo el tiempo» se pide una sola vez (en Android 11+ abre los ajustes; pedirlo en cada
+      // servicio llevaría al conductor a los ajustes cada vez).
+      const current = await PowerWakelock.checkLocationAlways();
+      const askAlways = !current.alwaysGranted && !localStorage.getItem('gps_always_prompted');
+      const location = !current.fineGranted || askAlways ? await PowerWakelock.requestLocationAlways() : current;
+      if (askAlways) {
+        localStorage.setItem('gps_always_prompted', '1');
+      }
+
+      if (!location?.fineGranted) {
+        await notify('Ubicación requerida', 'Para rastrear el servicio permite la ubicación. Se abrirán los ajustes de la app.');
         await PowerWakelock.openAppSettings();
 
         return false;
       }
     } catch {
-      await notify('Ubicación requerida', "No se pudo verificar el permiso de ubicación. En los ajustes elige «Permitir todo el tiempo».");
+      await notify('Ubicación requerida', 'No se pudo verificar el permiso de ubicación. Revísalo en los ajustes de la app.');
       await PowerWakelock.openAppSettings().catch(() => {});
 
       return false;
@@ -294,23 +301,18 @@ async function manufacturerTips(): Promise<void> {
       backdropDismiss: false,
       buttons: [
         { text: 'Entendido', role: 'cancel' },
-        {
-          text: 'Ir a ajustes',
-          handler: () => {
-            localStorage.setItem('gps_instruction_seen', '1');
-            void BackgroundGeolocation.openSettings();
-          },
-        },
+        { text: 'Ir a ajustes', handler: () => void BackgroundGeolocation.openSettings() },
       ],
     });
     await alert.present();
+    localStorage.setItem('gps_instruction_seen', '1');
   } catch {
     // Sin información del equipo, no se muestra nada.
   }
 }
 
-/** Mantiene despiertos la CPU y el WebView y avisa en la barra que el rastreo está activo. */
-async function keepAlive(number: string): Promise<void> {
+/** Mantiene despiertos la CPU y el WebView (la notificación la pone BackgroundGeolocation). */
+async function keepAlive(): Promise<void> {
   if (Capacitor.getPlatform() === 'android') {
     try {
       const notifications = await PowerWakelock.requestNotificationsPermission();
@@ -335,18 +337,6 @@ async function keepAlive(number: string): Promise<void> {
     await PowerWakelock.acquireWakeLock();
   } catch (error) {
     console.warn(CONFIG.log, 'Sin wakelock', error);
-  }
-
-  try {
-    await ForegroundService.start({
-      id: 101,
-      title: 'Servicio en curso',
-      body: `Rastreo activo del servicio #${number}. No cierres la aplicación.`,
-      smallIcon: 'ic_launcher',
-      importance: 3,
-    });
-  } catch (error) {
-    console.warn(CONFIG.log, 'Sin foreground service', error);
   }
 }
 
@@ -385,18 +375,15 @@ export const gpsTracker = {
         return;
       }
 
-      await keepAlive(number);
+      await keepAlive();
+      // El plugin solo lee estas opciones: el intervalo (1 s) es fijo y no sobrevive al cierre de la app.
       watcherId = await BackgroundGeolocation.addWatcher(
         {
-          backgroundTitle: 'Rastreo GPS',
-          backgroundMessage: `Seguimiento en tiempo real del servicio #${number}.`,
+          backgroundTitle: `Servicio #${number} en curso`,
+          backgroundMessage: 'Rastreo GPS activo. No cierres la aplicación hasta finalizar el servicio.',
           requestPermissions: true,
           stale: false,
           distanceFilter: 0,
-          interval: 2000,
-          fastestInterval: 1000,
-          stopOnTerminate: false,
-          startOnBoot: true,
         },
         (location, error) => {
           if (error?.code === 'NOT_AUTHORIZED') {
@@ -426,7 +413,6 @@ export const gpsTracker = {
           await BackgroundGeolocation.removeWatcher({ id });
           await KeepAwake.allowSleep().catch(() => {});
           await PowerWakelock.releaseWakeLock().catch(() => {});
-          await ForegroundService.stop().catch(() => {});
         } else {
           await Geolocation.clearWatch({ id });
         }

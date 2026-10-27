@@ -17,7 +17,6 @@ dependencies {
     implementation project(':capacitor-geolocation')
     implementation project(':capacitor-network')
     implementation project(':capacitor-preferences')
-    implementation project(':capacitor-foreground-service')
 
 }
 

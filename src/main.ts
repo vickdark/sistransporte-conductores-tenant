@@ -31,11 +31,12 @@ setUnauthorizedHandler(() => {
   void router.replace('/login');
 });
 
-// Botón «atrás» de Android: en el inicio o el login, sale de la app.
+// Botón «atrás» de Android: en el inicio o el login, sale de la app. Con un servicio en curso solo
+// la minimiza: cerrarla detiene el rastreo GPS.
 CapacitorApp.addListener('backButton', ({ canGoBack }) => {
   const name = router.currentRoute.value.name;
   if (name === 'home' || name === 'login' || !canGoBack) {
-    void CapacitorApp.exitApp();
+    void (gpsTracker.isTracking() ? CapacitorApp.minimizeApp() : CapacitorApp.exitApp());
   } else {
     router.back();
   }
