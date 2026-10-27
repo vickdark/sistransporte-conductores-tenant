@@ -1,55 +1,79 @@
 # SisTransporte Conductores
 
-Este proyecto es una aplicación Ionic desarrollada con JavaScript puro, sin el uso de frameworks como Angular, React o Vue. Utiliza componentes web de Ionic para construir la interfaz de usuario.
+App móvil (Android) de los conductores de SisTransporte. Con ella el conductor:
 
-## Requisitos Previos
+- Ve sus servicios por estado: pendientes, en curso, completados, cancelados y de apoyo.
+- Inicia y finaliza cada servicio con el kilometraje y una foto del tablero, y pide apoyo si lo necesita.
+- Transmite su ubicación por GPS mientras tiene un servicio en curso, incluso con la app en segundo plano.
+- Registra el checklist preoperacional, los tanqueos y las novedades.
 
-Asegúrate de tener instalado lo siguiente en tu máquina:
+La app sirve a todas las empresas de la plataforma. El conductor ingresa en el login central y la app
+trabaja con la API de su empresa. La empresa debe tener habilitada la «App móvil del conductor» en el
+panel central.
 
-*   **Node.js y npm:** Puedes descargarlos desde [nodejs.org](https://nodejs.org/). Se recomienda usar la versión LTS.
-*   **Ionic CLI:** La interfaz de línea de comandos de Ionic. Instálala globalmente usando npm:
+Hecha con **Ionic Vue 8 + TypeScript + Vite + Capacitor 8**. El diseño replica el del portal web
+(`sistema-transporte-tenant`): neutros, bordes finos, Instrument Sans y color solo en los estados.
 
-    ```bash
-    npm install -g @ionic/cli
-    ```
+## Requisitos
 
-## Configuración del Proyecto
+- Node.js (LTS) y npm.
+- Android Studio, para compilar la APK.
+- El sistema web (`sistema-transporte-tenant`) corriendo, para probar contra su API.
 
-1.  **Clonar el repositorio:**
-
-    ```bash
-    git clone <URL_DEL_REPOSITORIO>
-    cd sistransporte-conductores
-    ```
-
-2.  **Instalar dependencias:**
-
-    Aunque este proyecto no usa un `package.json` tradicional para dependencias de desarrollo, los componentes de Ionic se cargan directamente. Sin embargo, si en el futuro se añaden dependencias, este sería el paso:
-
-    ```bash
-    npm install
-    ```
-
-## Ejecución del Proyecto
-
-Este proyecto utiliza [Vite](https://vitejs.dev/) como su servidor de desarrollo. Para ejecutar la aplicación en tu navegador, usa el siguiente comando:
+## Primeros pasos
 
 ```bash
-npm run dev
+npm ci                 # instala exactamente las versiones de package-lock.json
+npx patch-package      # aplica el parche de capacitor-foreground-service (carpeta patches/)
 ```
 
-Esto iniciará un servidor de desarrollo y abrirá la aplicación en tu navegador predeterminado. La aplicación estará disponible en `http://localhost:5173` (o un puerto similar, que Vite asigna por defecto).
+Crea `.env` en la raíz con la dirección de la API central:
 
-## Estructura del Proyecto
+```env
+VITE_CENTRAL_API_URL=https://sistema-transporte-tenant.test/api/v1/
+```
 
-*   `index.html`: El punto de entrada principal de la aplicación.
-*   `src/`: Contiene el código fuente de la aplicación.
-    *   `src/main.js`: Archivo principal de JavaScript que inicializa Ionic y carga las páginas.
-    *   `src/styles.css`: Estilos globales de la aplicación.
-    *   `src/pages/`: Contiene los componentes de las diferentes páginas de la aplicación (ej. `home.js`, `login.js`, `pendientes.js`, `show.js`).
-    *   `src/pages/services-base.js`: Contiene lógica y utilidades compartidas para las páginas de servicios.
+[GUIA_ENTORNOS.md](GUIA_ENTORNOS.md) explica `.env`, `.env.production` y cómo apuntar a pruebas o a producción.
 
-## Notas Adicionales
+> Usa `npm ci` y no `npm update`: `npm update` sube versiones y puede descuadrar binarios como esbuild.
+> Si `npm ci` falla con `EBUSY`, detén primero el servidor de Vite que esté corriendo.
 
-*   Este proyecto utiliza el enrutamiento basado en hash (`#/`) para la navegación entre páginas.
-*   Los componentes de Ionic se importan y definen directamente en `main.js`.
+## Comandos
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Servidor de desarrollo en el navegador (cámara y GPS limitados). |
+| `npm run typecheck` | Revisa los tipos con `vue-tsc`. |
+| `npm run build` | Revisa los tipos y compila a `dist/` con `.env.production`. |
+| `npx vite build --mode development` | Compila con `.env` (APK de pruebas). |
+| `npx cap sync android` | Copia `dist/` y los plugins al proyecto Android. |
+| `npx cap open android` | Abre Android Studio para generar la APK o el AAB. |
+
+Para generar la APK, haz el build, luego `npx cap sync android` y genera la APK en Android Studio.
+Los pasos completos por entorno están en [GUIA_ENTORNOS.md](GUIA_ENTORNOS.md).
+
+## Estructura
+
+```
+src/
+  api/          Cliente HTTP (token, dirección de la empresa, 401 → login), sesión, tipos y llamadas
+  views/        Pantallas: login, inicio, servicios, detalle, tanqueo, checklist y novedad
+  components/   Encabezado, tarjeta de servicio, campo de foto, buscador de placas…
+  composables/  Cámara (solo cámara, sin galería), logo de la empresa y tema claro/oscuro
+  services/     gpsTracker.ts: rastreo GPS en segundo plano y envío por lotes
+  router/       Rutas; sin sesión, solo el login
+  utils/        Formatos de fecha, km y nombres de los estados
+  styles.css    Tokens de color del portal y estilos de los componentes de Ionic
+android/        Proyecto nativo de Capacitor (incluye PowerPlugin.java)
+patches/        Parche de capacitor-foreground-service
+```
+
+## Notas
+
+- **Fotos:** las fotos se toman solo con la cámara del teléfono, sin galería ni archivos, porque el
+  servidor solo acepta fotos tomadas en el momento.
+- **GPS:** el rastreo arranca al iniciar un servicio y se detiene al finalizarlo o al cerrar sesión. Si la
+  app se cierra o el teléfono se reinicia, el rastreo se retoma. Los detalles están en
+  [DOCUMENTACION_GPS.md](DOCUMENTACION_GPS.md).
+- **Tema:** el modo claro u oscuro se cambia con el botón del encabezado y se recuerda en el teléfono.
+- **API:** el contrato está en el sistema web, en `docs/API_APP_CONDUCTOR.md`.

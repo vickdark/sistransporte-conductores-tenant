@@ -4,20 +4,31 @@ Este documento explica cómo el proyecto maneja automáticamente las URLs de con
 
 ## 1. Archivos de Configuración (.env)
 
-El proyecto utiliza archivos `.env` para centralizar las URLs de los servidores. Estos archivos se encuentran en la raíz del proyecto:
+La app se conecta a la **API v1 del sistema nuevo** (multiempresa). Solo necesita la dirección del
+**login central**: al ingresar, el servidor devuelve la dirección de la empresa del conductor y desde ahí
+la app le habla directo a su empresa. Los archivos `.env` están en la raíz y no se suben al repositorio:
 
-*   **`.env` (Entorno de Pruebas)**: Se utiliza por defecto durante el desarrollo local (`npm run dev`) o compilaciones de desarrollo.
-    *   URL API: `https://test-transporteskemuel.mambacode.dev/api-transporte-kemuel/`
-*   **`.env.production` (Entorno de Producción)**: Se utiliza automáticamente cuando ejecutas el comando de construcción para producción (`npm run build`).
-    *   URL API: `https://transporteskemuel.mambacode.dev/api-transporte-kemuel/`
+*   **`.env` (desarrollo)**: `npm run dev` o `npx vite build --mode development`.
+    *   `VITE_CENTRAL_API_URL=https://sistema-transporte-tenant.test/api/v1/` (en un teléfono, usar una dirección que el teléfono alcance: IP de la red o un túnel https).
+*   **`.env.production` (producción)**: `npm run build`.
+    *   `VITE_CENTRAL_API_URL=https://{dominio central}/api/v1/` (reemplazar `CAMBIAR-DOMINIO-CENTRAL` antes de compilar; si no, la app avisa «App sin configurar» al ingresar).
 
 ## 2. Variables Disponibles
 
-En el código JavaScript, las variables se acceden mediante `import.meta.env`. Las variables configuradas son:
+*   `VITE_CENTRAL_API_URL`: API central de la plataforma (solo el login), terminada en `/api/v1/`.
 
-*   `VITE_API_BASE_URL`: URL base para todas las peticiones a la API.
-*   `VITE_ASSETS_URL`: Ruta para recursos como logos e imágenes del servidor.
-*   `VITE_BG_IMAGE_URL`: URL de la imagen de fondo para la pantalla de login.
+El contrato de la API está en el sistema: `docs/API_APP_CONDUCTOR.md`. La empresa debe tener habilitada
+la «App móvil del conductor» en el panel central.
+
+## Estructura (Ionic Vue + TypeScript)
+
+*   `src/api/`: cliente HTTP (token, dirección de la empresa, 401 → login), sesión y tipos de la API.
+*   `src/services/gpsTracker.ts`: rastreo GPS en segundo plano (BackgroundGeolocation, foreground service, KeepAwake y `PowerPlugin.java`), con envío por lotes a `POST /gps/positions`.
+*   `src/views/`: login, inicio, servicios, detalle, tanqueo, checklist y novedad.
+*   `src/components/`, `src/composables/`, `src/utils/`: piezas compartidas.
+
+`npm run typecheck` revisa los tipos; `npm run build` los revisa y compila. Tras `npm install`, aplicar
+el parche de `capacitor-foreground-service` con `npx patch-package`.
 
 ## 3. Cómo Generar la APK según el Entorno
 
